@@ -1,0 +1,41 @@
+{
+    "variables": {
+      "aws_access_key": "",
+      "aws_secret_key": ""
+    },
+    "builders": [
+      {
+        "type": "amazon-ebs",
+        "access_key": "{{ user `aws_access_key` }}",
+        "secret_key": "{{ user `aws_secret_key` }}",
+        "region": "us-east-1",
+        "source_ami": "ami-xxxxxxxxxxxxx",
+        "instance_type": "t2.micro",
+        "ssh_username": "ubuntu",
+        "ami_name": "custom-ami {{timestamp}}"
+      }
+    ],
+    "provisioners": [
+      {
+        "type": "shell",
+        "inline": [
+          "apt-get update",
+          "apt-get install -y awslogs",
+          "cat <<EOF >> /etc/awslogs/awslogs.conf",
+          "[general]",
+          "state_file = /var/lib/awslogs/agent-state",
+          "use_gzip_http_content_encoding = true",
+          "",
+          "[/var/log/myapp/*.log]",
+          "file = /var/log/myapp/*.log",
+          "log_group_name = /aws/myapp-logs",
+          "log_stream_name = {instance_id}",
+          "datetime_format = %Y-%m-%dT%H:%M:%S.%f%z",
+          "EOF",
+          "systemctl enable awslogsd",
+          "systemctl start awslogsd"
+        ]
+      }
+    ]
+  }
+  

@@ -1,0 +1,18 @@
+FROM ubuntu:latest
+
+# Install necessary dependencies
+RUN apt-get update && apt-get install -y curl
+
+# Install CloudWatch Logs agent
+RUN curl https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py -O
+RUN chmod +x awslogs-agent-setup.py
+RUN ./awslogs-agent-setup.py -n -r <your-region> -c /path/to/awslogs.conf
+
+# Copy your application code and configurations to the container
+COPY . /app
+
+# Set the working directory
+WORKDIR /app
+
+# Run your application
+CMD [ "python", "app.py" ]

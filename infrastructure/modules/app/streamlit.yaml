@@ -1,0 +1,40 @@
+---
+- hosts: localhost
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Install Streamlit dependencies
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - python3-pip
+        - python3-venv
+
+    - name: Create virtual environment
+      command: python3 -m venv /opt/myapp/venv
+
+    - name: Activate virtual environment
+      command: source /opt/myapp/venv/bin/activate
+
+    - name: Upgrade pip
+      pip:
+        name: pip
+        executable: /opt/myapp/venv/bin/pip
+        extra_args: --upgrade
+
+    - name: Install Streamlit
+      pip:
+        name: streamlit
+        executable: /opt/myapp/venv/bin/pip
+
+    - name: Copy Streamlit app files
+      copy:
+        src: /path/to/streamlit_app_files
+        dest: /opt/myapp/app
+
+    - name: Start Streamlit application
+      command: streamlit run /opt/myapp/app/myapp.py
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/opt/myapp/venv/bin"

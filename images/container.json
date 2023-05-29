@@ -1,0 +1,48 @@
+{
+    "variables": {
+      "docker_image_name": "",
+      "dockerfile_path": "",
+      "codeartifact_repository_endpoint": ""
+    },
+    "builders": [
+      {
+        "type": "docker",
+        "image": "{{user `docker_image_name`}}",
+        "commit": true,
+        "changes": ["CMD [\"/bin/bash\"]"]
+      }
+    ],
+    "provisioners": [
+      {
+        "type": "shell",
+        "inline": [
+          "echo 'Configure AWS CLI'",
+          "aws configure set default.region us-east-1",
+          "aws configure set default.output json"
+        ]
+      },
+      {
+        "type": "shell",
+        "environment_vars": ["CODEARTIFACT_AUTH_TOKEN={{user `codeartifact_repository_endpoint`}}"],
+        "inline": [
+          "echo 'Logging in to AWS CodeArtifact'",
+          "aws codeartifact login --tool packer --repository {{user `codeartifact_repository_endpoint`}}"
+        ]
+      }
+    ],
+    "post-processors": [
+      {
+        "type": "docker-import",
+        "repository": "{{user `codeartifact_repository_endpoint`}}",
+        "tag": "latest"
+      }
+    ],
+    "artifacts": [
+      {
+        "type": "docker-push",
+        "repository": "{{user `codeartifact_repository_endpoint`}}",
+        "tag": "latest"
+      }
+    ]
+  }
+  
